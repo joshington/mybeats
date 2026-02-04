@@ -185,10 +185,11 @@
                                     </td>
                                     <td>
                                         <div class="audio-player">
-                                            <audio id="audio-{{ beat.id }}" preload="none">
+                                            <audio controls preload="none" id="audio-{{ beat.id }}">
                                                 <source src="{{ beat.audio_file.url }}" type="audio/mpeg">
                                             </audio>
-                                            <div class="player-controls d-flex align-items-center">
+                                        <!--
+                                             <div class="player-controls d-flex align-items-center">
                                                 <button class="btn btn-sm btn-outline-primary play-btn me-2" 
                                                         data-audio="audio-{{ beat.id }}">
                                                     <i class="fas fa-play"></i>
@@ -199,6 +200,8 @@
                                                 <small class="text-muted">1:30</small>
                                             </div>
                                         </div>
+                                        -->
+                                           
                                     </td>
                                     <td>
                                         <div class="bpm-key">
@@ -216,9 +219,16 @@
                                                 <i class="far fa-heart"></i>
                                             </button>
                                             <button class="btn btn-primary add-to-cart" 
-                                                    data-beat-id="{{ beat.id }}">
-                                                <i class="fas fa-cart-plus"></i> Add
+                                                data-beat-id="{{ beat.id }}"
+                                            >
+                                                <a href="{% url 'main:purch_download' beat.id %}" 
+                                                    style="color: white;text-decoration: none;">
+                                                    <i class="fas fa-cart-plus"></i> 
+                                                    Buy
+                                                </a>
                                             </button>
+                                            
+                                            
                                             <button class="btn btn-outline-success">
                                                 <i class="fas fa-download"></i>
                                             </button>

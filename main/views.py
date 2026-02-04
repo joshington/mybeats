@@ -32,7 +32,7 @@ load_dotenv()
 #initialize environment variables
 
 
-beat_id = 0 #will chnage it later, but we have added 0 as the default.
+beat_id_global = 0 #will chnage it later, but we have added 0 as the default.
 
 
 
@@ -85,6 +85,11 @@ def download_beat(request, beat_id):
 #===from here
 def process_payment(request, name,email):
     auth_token = os.getenv('SECRET_TEST') #picking the secret key starting with test
+    #===check if auth token is available
+    if not auth_token:
+        print("ERROR: SECRET_TEST environment variable is not set!")
+        # You can raise an error or return a meaningful response
+        raise ValueError("Flutterwave secret key not found in environment variables.")
     hed = {
         'Authorization':'Bearer ' + auth_token,
         'Content-Type':'application/json',
@@ -109,7 +114,7 @@ def process_payment(request, name,email):
             "name":name
         },
         "customizations":{
-            "title":"Viber",
+            "title":"Warren Beats",
             "description":"Classic Beats",
             "logo":"https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg"
         },
@@ -139,7 +144,7 @@ def payment_response(request):
     print(tx_ref)
 
     #===get the beat using the global scope
-    beat = get_object_or_404(Beat, pk=beat_id)
+    beat = get_object_or_404(Beat, pk=beat_id_global)
     #the above gets me the beat object.
     if status == "successful":
         #===if purchase successful go ahead and download the beat.
@@ -168,14 +173,14 @@ def payment_response(request):
 
         
 #====new function to handle processing th
-def purchase_and_download_beat(request,my_beat_id):
+def purchase_and_download_beat(request,beat_id):
     """Combine purchase and download in one view"""
-    global beat_id #so i have made beat_id a global variable that meaans i can access it anywhere
-    beat = get_object_or_404(Beat, pk=my_beat_id)
+    global beat_id_global #so i have made beat_id a global variable that meaans i can access it anywhere
+    beat = get_object_or_404(Beat, pk=beat_id)
 
     #===go ahead and update the global scope so that the beat_id is stored.
     
-    beat_id = beat.id
+    beat_id_global = beat.id
     #==i have the beat_id here
 
     if request.method == 'POST':
@@ -187,7 +192,12 @@ def purchase_and_download_beat(request,my_beat_id):
         #====i dont need to pass the beat id from here because i only intend to handle payments.
         return redirect(payment_link)#====now we are redirecting to start on the payment
     else:
-        pass          
+            # For GET request, show purchase confirmation page
+        # Create a simple purchase confirmation template
+        return render(request, 'main/purchase_confirm.html', {
+            'beat': beat,
+            'price': beat.price,
+        })  
 
 
 
