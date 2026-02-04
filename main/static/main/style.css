@@ -1,0 +1,69 @@
+body {
+    background: white url("images/background.png");
+}
+
+ul.errorlist {
+    padding-left: 0;
+}
+
+ul.errorlist > li {
+    list-style: none;
+}
+
+.navbar {
+    border-radius: 0;
+}
+
+.navbar-brand {
+    font-family: 'Satisfy', cursive;
+}
+
+.glyphicon-star {
+    color: #CCCCCC;
+    font-size: 16px;
+}
+
+.glyphicon-star.active {
+    color: #FDB230;
+}
+
+.btn-buy {
+    display: inline-block;
+    padding: 12px 12px;
+    background: #1db954; /* Spotify green */
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(29, 185, 84, 0.4);
+    position: relative;
+}
+
+.btn-buy:hover {
+    background: #1ed760;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(29, 185, 84, 0.6);
+}
+.btn-buy:active {
+    transform: translateY(-1px);
+}
+.btn-buy:active {
+    transform: translateY(-1px);
+}
+
+.btn-buy .glyphicon-star-buy.active {
+    background: #ff6b6b;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

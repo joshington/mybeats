@@ -1,0 +1,21 @@
+import uuid, random, re, socket
+from uuid import uuid4
+
+from rave_python import Rave, Misc
+import environ
+
+from .models import*
+
+#initialize environment variables
+env = environ.Env()
+environ.Env.read_env()
+
+SECRET_KEY = env('SECRET_KEY')
+PUBLIC_KEY = env('PUBLIC_KEY')
+
+PUBLIC_TEST = env('PUBLIC_TEST')
+SECRET_TEST = env('SECRET_TEST')
+
+DEFAULT_ADDRESS = 'bbosalj@gmail.com'
+
+rave = Rave(PUBLIC_TEST, SECRET_TEST)
