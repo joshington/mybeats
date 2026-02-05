@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from .models import * #attempting to import all models
 from django.db.models import Q
 
+from django.contrib import messages
+
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 
@@ -100,10 +102,11 @@ def process_payment(request, name,email):
     url = ' https://api.flutterwave.com/v3/payments'
     data = json.dumps({
         "tx_ref":''+str(math.floor(1000000 + random.random()*9000000)),
-        "amount":100,
+        "amount":40,
         "currency":"USD",
         "redirect_url": "http://127.0.0.1:8000/main/callback",#(Note this url must be hosted)
-        "payment_options":"mobilemoneyuganda,card",
+        "payment_options":"mobilemoney,card",
+        
         "meta":{
             "consumer_id":23,
             "consumer_mac":"92a3-912ba-1192a"
@@ -167,9 +170,15 @@ def payment_response(request):
        
         return redirect('download_beat', beat.id)
         #take it where it can be downloaded.
-    else:
+    elif status == "cancelled":
+        messages.error(request, "Payment was cancelled. Please try again.")
         #==must tell users to try again and pay.
-        pass
+        return redirect('main:detail', beat_id=beat.id)
+        #===but with due time we should return the same page for the beat
+    else:
+        messages.error(request, "Payment failed. Please try again.")
+        #will change it with time
+        return redirect(reverse("main:detail", args=[beat.album.id]))
 
         
 #====new function to handle processing th
