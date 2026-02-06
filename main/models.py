@@ -43,11 +43,15 @@
 
 
 from django.db import models
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Avg
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.http import HttpResponseForbidden, FileResponse
+import os
 
 
 
@@ -110,6 +114,8 @@ class Beat(models.Model):
         self.download_count += 1
         if self.download_count >= self.max_downloads:
             self.status = 'downloaded'
+            self.is_available = False  
+            # If you had this field, but you're using status
         self.save()
        
     #===mthd to check if beat is downloadable
@@ -313,7 +319,7 @@ class DownloadHistory(models.Model):
     """Model for storing the download history"""
     beat = models.ForeignKey(Beat, on_delete=models.CASCADE, related_name='downloadhistory')
     buyer = models.ForeignKey(Buyer, on_delete=models.CASCADE, related_name='downloadhistory')
-    download_count=models.PositiveIntegerField()
+    downloaded_at = models.DateTimeField(auto_now_add=True)  # Track when downloaded
 
     def __str__(self):
         return  f"{self.beat.title} - {self.beat.download_count}"
@@ -322,8 +328,23 @@ class DownloadHistory(models.Model):
     ##===i want to write a signal that after model is created, the download_count is incremented
     ##automatically, ofcourse i guess this has to be a post save_signal.
 
+    class Meta:
+        verbose_name_plural = "Download Histories"
+        ordering = ['-downloaded_at']
 
-
+#===signal to properly handle beat count
+# Update the signal to properly handle beat download count
+@receiver(post_save, sender=DownloadHistory)
+def update_beat_download_count(sender, instance, created, **kwargs):
+    if created:
+        # Increment the beat's download count
+        instance.beat.download_count += 1
+        
+        # If reached max downloads, mark as downloaded
+        if instance.beat.download_count >= instance.beat.max_downloads:
+            instance.beat.status = 'downloaded'
+            
+        instance.beat.save()
 
 class Rating(models.Model):
     """Model for beat ratings"""

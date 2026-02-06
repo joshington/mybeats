@@ -52,17 +52,13 @@ def download_beat(request, beat_id):
     if not has_purchased:
         return HttpResponseForbidden("You have not purchased this beat.")
     
-    if not beat.is_downloaded:
-        return HttpResponseForbidden("This beat is not marked as downloaded yet.")
+    #if not beat.is_downloaded:
+    #    return HttpResponseForbidden("This beat is not marked as downloaded yet.")
     
     #Get the file path
     file_path = beat.audio_file.path
 
     if os.path.exists(file_path):
-        #mark the beat as downloaded
-        beat.mark_as_downloaded()
-
-
         #create downlaod record,
         #need to create a download record for it here.
         DownloadHistory.objects.create(
@@ -75,6 +71,11 @@ def download_beat(request, beat_id):
         response = FileResponse(open(file_path, 'rb'))
         response['Content-Type'] = 'audio/mpeg'
         response['Content-Disposition'] = f'attachment; filename="{beat.title}.mp3"'
+
+        #if beat is successfully served for download, mark it unavailable
+        #mark the beat as downloaded
+        beat.mark_as_downloaded()
+        #every beat marked as downloaded should not be return in a group of others.
         return response
     else:
         return HttpResponseForbidden("File does not exist.")
@@ -105,7 +106,8 @@ def process_payment(request, name,email):
         "amount":40,
         "currency":"USD",
         "redirect_url": "http://127.0.0.1:8000/main/callback",#(Note this url must be hosted)
-        "payment_options":"mobilemoney,card",
+        "payment_options":"mobilemoneyuganda, \
+            card,mobilemoneyrwanda,mobilemoneyghana,banktransfer",
         
         "meta":{
             "consumer_id":23,
@@ -143,11 +145,23 @@ def payment_response(request):
     """Handle payment response from Flutterwave"""
     status = request.GET.get('status', None)
     tx_ref = request.GET.get('tx_ref', None)
+    #get beat id from session
+    beat_id = request.session.get('current_beat_id', None)  # Get beat_id from session
     print(status)
     print(tx_ref)
+    print(beat_id)
+
+    if not beat_id:
+        messages.error(request, "Invalid payment session. Please try again.")
+        return redirect('main:index')
 
     #===get the beat using the global scope
-    beat = get_object_or_404(Beat, pk=beat_id_global)
+    beat = get_object_or_404(Beat, pk=beat_id)
+
+    #clear the beat_id from session after use
+    if 'current_beat_id' in request.session:
+        del request.session['current_beat_id']
+        #the current beat id is deleted from session after use.
     #the above gets me the beat object.
     if status == "successful":
         #===if purchase successful go ahead and download the beat.
@@ -158,38 +172,47 @@ def payment_response(request):
             amount=beat.price,
             status='completed'
         )
-
+        #==first go ahead and enable the user to download the beat, before you mark it as
+        #downloaded, because if you mark it as downloaded before the user can download it, then the user will not be able to download it.
+        start_download = download_beat(
+            request, beat_id_global
+        )
+        redirect(start_download)#starting
         #Mark beat as downloaded
-        beat.mark_as_downloaded()
+        #and go ahead and let the user download the beat
 
-        
-
-        #Redirect to download view
-
-   
-       
-        return redirect('download_beat', beat.id)
+    
         #take it where it can be downloaded.
     elif status == "cancelled":
         messages.error(request, "Payment was cancelled. Please try again.")
         #==must tell users to try again and pay.
-        return redirect('main:detail', beat_id=beat.id)
+        if beat.album:
+            return redirect('main:detail', album_id=beat.album.id)
+        else:
+            return redirect('main:index')
         #===but with due time we should return the same page for the beat
     else:
         messages.error(request, "Payment failed. Please try again.")
         #will change it with time
-        return redirect(reverse("main:detail", args=[beat.album.id]))
+        if beat.album:
+            return redirect('main:detail', album_id=beat.album.id)
+        else:
+            return redirect('main:index')
+        
 
         
 #====new function to handle processing th
 def purchase_and_download_beat(request,beat_id):
     """Combine purchase and download in one view"""
-    global beat_id_global #so i have made beat_id a global variable that meaans i can access it anywhere
+    
     beat = get_object_or_404(Beat, pk=beat_id)
 
     #===go ahead and update the global scope so that the beat_id is stored.
     
-    beat_id_global = beat.id
+     # Store beat_id in session
+    request.session['current_beat_id'] = beat_id
+    print("Stored beat_id in session:", beat_id)
+    request.session.modified = True
     #==i have the beat_id here
 
     if request.method == 'POST':
@@ -243,7 +266,7 @@ def index(request):
 
 def detail(request, album_id):
     album = get_object_or_404(Album, pk=album_id)
-    beats = album.beats.all()  # This uses the reverse relationship
+    beats = album.beats.filter(status='available') # This uses the reverse relationship
     return render(request, 'main/detail.html', {'album': album, 'beats': beats})
 
 
