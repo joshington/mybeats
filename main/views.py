@@ -87,10 +87,10 @@ def download_beat(request, beat_id):
 #===i dont need to pass the beat id from here because i only intend to handle payments.
 #===from here
 def process_payment(request, name,email):
-    auth_token = os.getenv('SECRET_TEST') #picking the secret key starting with test
+    auth_token = os.getenv('SEC_LIVE') #picking the secret key starting with test
     #===check if auth token is available
     if not auth_token:
-        print("ERROR: SECRET_TEST environment variable is not set!")
+        print("ERROR: SECRET_LIVE environment variable is not set!")
         # You can raise an error or return a meaningful response
         raise ValueError("Flutterwave secret key not found in environment variables.")
     hed = {
