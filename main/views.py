@@ -108,7 +108,7 @@ def process_payment(request, name,email):
         "redirect_url": "http://127.0.0.1:8000/main/callback",#(Note this url must be hosted)
         "payment_options":"mobilemoneyuganda, \
             card,mobilemoneyrwanda,mobilemoneyghana,banktransfer",
-        
+
         "meta":{
             "consumer_id":23,
             "consumer_mac":"92a3-912ba-1192a"
@@ -119,7 +119,7 @@ def process_payment(request, name,email):
             "name":name
         },
         "customizations":{
-            "title":"Warren Beats",
+            "title":"Warren Pro Beats",
             "description":"Classic Beats",
             "logo":"https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg"
         },
